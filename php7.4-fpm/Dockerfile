@@ -51,8 +51,8 @@ RUN set -xe; \
     php -m | grep -q 'zip'
 
 # 安装 PECL 拓展，安装swoole
-RUN  pecl install -o -f swoole \
-    && docker-php-ext-enable swoole
+# RUN  pecl install -o -f swoole \
+#     && docker-php-ext-enable swoole
 
 # PDO_MYSQL
 ARG INSTSLL_PDO_MYSQL=false
