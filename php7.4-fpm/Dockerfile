@@ -50,6 +50,12 @@ RUN set -xe; \
     docker-php-ext-install zip && \
     php -m | grep -q 'zip'
 
+# 增加日志目录
+RUN mkdir -p /data/wwwlogs; \
+    chmod -R 0777 /data/wwwlogs; \
+    mkdir -p /data/logs; \
+    chmod -R 0777 /data/logs
+
 # 安装 PECL 拓展，安装swoole
 # RUN  pecl install -o -f swoole \
 #     && docker-php-ext-enable swoole

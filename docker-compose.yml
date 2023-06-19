@@ -45,6 +45,18 @@ services:
             - ${WWWROOT}:${CONTAINER_WWWROOT}
         networks: 
             - backend
+    postgres:
+        build:
+            context: ./postgresql
+        container_name: xybdiy_postgres
+        restart: always
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: root
+        ports:
+            - 5432:5432
+        volumes:
+            - ./postgresql/data:/var/lib/postgresql/data
     # php7.1-fpm:
     #     build: 
     #         context: ./php7.1-fpm 
