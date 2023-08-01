@@ -3,6 +3,9 @@ RUN apt-get update && apt-get install -y \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
         libpng-dev \
+        libcurl4-openssl-dev \
+        pkg-config \
+        libssl-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd  gettext sockets \
     && docker-php-ext-install bcmath 
