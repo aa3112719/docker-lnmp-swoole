@@ -45,18 +45,18 @@ services:
             - ${WWWROOT}:${CONTAINER_WWWROOT}
         networks: 
             - backend
-    postgres:
-        build:
-            context: ./postgresql
-        container_name: xybdiy_postgres
-        restart: always
-        environment:
-            POSTGRES_USER: root
-            POSTGRES_PASSWORD: root
-        ports:
-            - 5432:5432
-        volumes:
-            - ./postgresql/data:/var/lib/postgresql/data
+    # postgres:
+    #     build:
+    #         context: ./postgresql
+    #     container_name: xybdiy_postgres
+    #     restart: always
+    #     environment:
+    #         POSTGRES_USER: root
+    #         POSTGRES_PASSWORD: root
+    #     ports:
+    #         - 5432:5432
+    #     volumes:
+    #         - ./postgresql/data:/var/lib/postgresql/data
     mongo:
         build:
             context: ./mongo
@@ -92,22 +92,42 @@ services:
     #         - ${WWWROOT}:${CONTAINER_WWWROOT}
     #     networks: 
     #         - backend        
-    # redis:
-    #     build: ./redis
-    #     container_name: redis
-    #     volumes:
-    #         - ${DATA_PATH}/redis:/data
-    #     ports:
-    #         - ${REDIS_PORT}:6379
-    #     networks:
-    #         - backend
-    
-    # mysql:
+    redis:
+        build: ./redis
+        container_name: redis
+        volumes:
+            - ${DATA_PATH}/redis:/data
+        ports:
+            - ${REDIS_PORT}:6379
+        networks:
+            - backend
+    mysql:
+        build:
+            context: ./mysql
+            args:
+            - MYSQL_VERSION=${MYSQL_VERSION}
+        container_name: mysql
+        command: 
+            --innodb-use-native-aio=0 
+        environment:
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - TIMEZONE=${WORKSPACE_TIMEZONE}
+        volumes:
+            - ${DATA_PATH}/mysql/data:/var/lib/mysql
+            - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+        ports:
+            - ${MYSQL_PORT}:3306
+        networks:
+            - backend
+    # mysql8:
     #     build:
     #         context: ./mysql
     #         args:
-    #         - MYSQL_VERSION=${MYSQL_VERSION}
-    #     container_name: mysql
+    #             - MYSQL_VERSION=8.0.26
+    #     container_name: mysql8
     #     command: 
     #         --innodb-use-native-aio=0 
     #     environment:
@@ -117,13 +137,12 @@ services:
     #         - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     #         - TIMEZONE=${WORKSPACE_TIMEZONE}
     #     volumes:
-    #         - ${DATA_PATH}/mysql:/var/lib/mysql
+    #         - ${DATA_PATH}/mysql/data:/var/lib/mysql
     #         - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
     #     ports:
     #         - ${MYSQL_PORT}:3306
     #     networks:
     #         - backend
-    
     # mariadb:
     #     build:
     #         context: ./mariadb

@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN pecl channel-update pecl.php.net
 
+COPY ./php.ini /usr/local/etc/php/php.ini
+
 # 是否使用国内镜像
 ARG USE_CHINESE_MIRRORS=true
 RUN if [ ${USE_CHINESE_MIRRORS}} = true ]; then \
