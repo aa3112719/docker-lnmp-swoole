@@ -20,8 +20,10 @@ services:
         command: [nginx-debug, '-g', 'daemon off;']
         depends_on: 
             - php7.4-fpm
+            - php7.2-fpm
         links: 
             - php7.4-fpm
+            - php7.2-fpm
         networks: 
             - frontend
             - backend
@@ -42,6 +44,29 @@ services:
             - 9000:9000
         volumes: 
             - ./php7.4-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
+            - ${WWWROOT}:${CONTAINER_WWWROOT}
+        networks: 
+            - backend
+    php7.2-fpm:
+        build: 
+            context: ./php7.2-fpm 
+            args:
+                - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
+                - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
+                - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
+                - INSTALL_MYSQLI=${PHP_FPM_INSTALL_MYSQLI}
+                - INSTALL_MYSQL_CLIENT=${PHP_FPM_INSTALL_MYSQL_CLIENT}
+                - INSTSLL_PDO_MYSQL=${PHP_FPM_INSTSLL_PDO_MYSQL}
+        container_name: php7.2-fpm
+        restart: always
+        working_dir: ${CONTAINER_WWWROOT}
+        ports:
+            - 8182:8182
+        volumes: 
+            - ./php7.2-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
+            - ./php7.2-fpm/php-fpm.d/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
+            - ./php7.2-fpm/php.ini:/usr/local/etc/php/php.ini
+            - ./php7.2-fpm/php-fpm.conf:/usr/local/etc/php-fpm.conf
             - ${WWWROOT}:${CONTAINER_WWWROOT}
         networks: 
             - backend
