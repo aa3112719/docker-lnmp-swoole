@@ -1,2 +1,4 @@
 /data
 jianmu/*
+postgresql/data/*
+mongo/data/*

@@ -1,48 +1,4 @@
-FROM php:7.4-fpm
-RUN apt-get update && apt-get install -y \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
-        libcurl4-openssl-dev \
-        pkg-config \
-        libssl-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd  gettext sockets \
-    && docker-php-ext-install bcmath 
-
-RUN pecl channel-update pecl.php.net
-
-COPY ./php.ini /usr/local/etc/php/php.ini
-
-# 是否使用国内镜像
-ARG USE_CHINESE_MIRRORS=true
-RUN if [ ${USE_CHINESE_MIRRORS}} = true ]; then \
-    sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/api/sources.list && \
-    sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/api/sources.list && \
-    sed -i 's/security-cdn.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/api/sources.list \
-;fi
-
-# 设置完新的软件源需要再次更新
-RUN set -xe; \
-    apt-get update -yqq && \
-    pecl channel-update pecl.php.net && \
-    apt-get install -yqq \
-    apt-utils \
-      #
-      #--------------------------------------------------------------------------
-      # Mandatory Software's Installation
-      #--------------------------------------------------------------------------
-      #
-      # Mandatory Software's such as ("mcrypt", "pdo_mysql", "libssl-dev", ....)
-      # are installed on the base image 'laradock/php-fpm' image. If you want
-      # to add more Software's or remove existing one, you need to edit the
-      # base image (https://github.com/Laradock/php-fpm).
-      #
-      # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
-      libzip-dev zip unzip && \
-      docker-php-ext-configure zip; \
-      docker-php-ext-install zip && \
-      php -m | grep -q 'zip'
+FROM yiisoftware/yii2-php:7.2-fpm
 
 RUN set -xe; \
     apt-get update -yqq && \
@@ -55,11 +11,19 @@ RUN set -xe; \
     docker-php-ext-install zip && \
     php -m | grep -q 'zip'
 
+    # 安装 OpenSSL
+RUN apt-get update && apt-get install -y \
+    openssl \
+    libssl-dev
+
 # 增加日志目录
 RUN mkdir -p /data/wwwlogs; \
     chmod -R 0777 /data/wwwlogs; \
     mkdir -p /data/logs; \
     chmod -R 0777 /data/logs
+
+# 去掉zz-docker.conf
+# RUN mv /usr/local/etc/php-fpm.d/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf.bak
 
 # 安装 PECL 拓展，安装swoole
 # RUN  pecl install -o -f swoole \
