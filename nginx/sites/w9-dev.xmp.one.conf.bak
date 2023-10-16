@@ -37,6 +37,4 @@ server {
 
     error_log /var/log/nginx/w9-dev.xmp.one.error.log;
     access_log /var/log/nginx/w9-dev.xmp.one.access.log;
-    # error_log /data/wwwlogs/pa-dev.xmp.one.error.log;
-    # access_log /data/wwwlogs/pa-dev.xmp.one.access.log;
 }

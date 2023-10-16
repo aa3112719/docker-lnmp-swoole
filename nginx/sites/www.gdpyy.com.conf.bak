@@ -1,0 +1,23 @@
+upstream jianmu_server {
+    server gitbook:4001;
+}
+
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name www.gdpyy.com;
+
+    #证书
+    ssl_certificate /etc/nginx/conf.d/ssl/jm.gdpyy.com_bundle.crt;
+    ssl_certificate_key /etc/nginx/conf.d/ssl/jm.gdpyy.com.key;
+
+    location / {
+        proxy_pass http://jianmu_server;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    
+    error_log /var/log/nginx/jm.gdpyy.com.error.log;
+    access_log /var/log/nginx/jm.gdpyy.com.access.log;
+}

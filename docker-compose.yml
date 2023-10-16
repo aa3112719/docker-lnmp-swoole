@@ -5,8 +5,25 @@ networks:
         driver: ${NETWORKS_DRIVER}
     backend:
         driver: ${NETWORKS_DRIVER}
+    # default:
+    #     ipam:
+    #         config:
+    #             - subnet: 10.1.0.0/16
 
 services:
+    go-gin:
+        build:
+            context: ./go-gin
+            dockerfile: Dockerfile
+        container_name: go-gin
+        ports:
+            - 20201:20201
+        working_dir: ${CONTAINER_WWWROOT}/mh_go
+        volumes:
+            - ${WWWROOT}:${CONTAINER_WWWROOT}
+        networks:
+            - backend
+        command: ["bash", "-c", "./mh_go"]
     nginx:
         restart: always
         build: ./nginx
@@ -20,8 +37,10 @@ services:
         command: [nginx-debug, '-g', 'daemon off;']
         depends_on: 
             - php7.4-fpm
+            - go-gin
         links: 
             - php7.4-fpm
+            - go-gin
         networks: 
             - frontend
             - backend
@@ -45,101 +64,63 @@ services:
             - ${WWWROOT}:${CONTAINER_WWWROOT}
         networks: 
             - backend
-    # php7.1-fpm:
-    #     build: 
-    #         context: ./php7.1-fpm 
-    #         args:
-    #             - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
-    #             - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
-    #             - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
-    #             - INSTALL_MYSQLI=${PHP_FPM_INSTALL_MYSQLI}
-    #             - INSTALL_MYSQL_CLIENT=${PHP_FPM_INSTALL_MYSQL_CLIENT}
-    #             - INSTSLL_PDO_MYSQL=${PHP_FPM_INSTSLL_PDO_MYSQL}
-    #     container_name: php7.4-fpm
+    # jianmu-mysql:
+    #     image: docker.jianmuhub.com/library/mysql:8.0.31
+    #     command: --init-connect='SET NAMES utf8' --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=1200 --max-user-connections=1000
     #     restart: always
-    #     working_dir: ${CONTAINER_WWWROOT}
-    #     ports:
-    #         - 9000:9000
-    #     volumes: 
-    #         - ./php7.4-fpm/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
-    #         - ${WWWROOT}:${CONTAINER_WWWROOT}
-    #     networks: 
-    #         - backend        
-    # redis:
-    #     build: ./redis
-    #     container_name: redis
-    #     volumes:
-    #         - ${DATA_PATH}/redis:/data
-    #     ports:
-    #         - ${REDIS_PORT}:6379
-    #     networks:
-    #         - backend
-    
-    # mysql:
-    #     build:
-    #         context: ./mysql
-    #         args:
-    #         - MYSQL_VERSION=${MYSQL_VERSION}
-    #     container_name: mysql
-    #     command: 
-    #         --innodb-use-native-aio=0 
     #     environment:
-    #         - MYSQL_DATABASE=${MYSQL_DATABASE}
-    #         - MYSQL_USER=${MYSQL_USER}
-    #         - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    #         - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    #         - TIMEZONE=${WORKSPACE_TIMEZONE}
+    #         MYSQL_ROOT_PASSWORD: 123456
+    #         MYSQL_DATABASE: "jianmu"
+    #         TZ: "Asia/Shanghai"
     #     volumes:
-    #         - ${DATA_PATH}/mysql:/var/lib/mysql
-    #         - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
-    #     ports:
-    #         - ${MYSQL_PORT}:3306
+    #         - ./jianmu/mysql:/var/lib/mysql
+            
     #     networks:
-    #         - backend
-    
-    # mariadb:
-    #     build:
-    #         context: ./mariadb
-    #         args:
-    #         - http_proxy
-    #         - https_proxy
-    #         - no_proxy
-    #         - MARIADB_VERSION=${MARIADB_VERSION}
-    #     container_name: mariadb
-    #     volumes:
-    #         - ${DATA_PATH}/mariadb:/var/lib/mysql
-    #         - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
-    #     ports:
-    #         - ${MARIADB_PORT}:3366
+    #         - frontend
+    # ci-server:
+    #     image: docker.jianmuhub.com/jianmu/jianmu-server:v2.7.1
+    #     restart: always
     #     environment:
-    #         - TZ=${WORKSPACE_TIMEZONE}
-    #         - MYSQL_DATABASE=${MARIADB_DATABASE}
-    #         - MYSQL_USER=${MARIADB_USER}
-    #         - MYSQL_PASSWORD=${MARIADB_PASSWORD}
-    #         - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
-    #     networks:
-    #         - backend
-
-    # zookeeper:
-    #     build: ./zookeeper
-    #     container_name: zookeeper
+    #         SPRING_PROFILES_ACTIVE: dev
+    #         SPRING_DATASOURCE_URL: jdbc:mysql://jianmu-mysql:3306/jianmu?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    #         SPRING_DATASOURCE_USERNAME: root
+    #         SPRING_DATASOURCE_PASSWORD: 123456
+    #         JIANMU_WORKER_SECRET: worker-secret
+    #         JIANMU_API_ADMINPASSWD: k9kQdPd5Fw9qmD0ikMiQ
+    #     #      REGISTRY_AK:
+    #     #      REGISTRY_SK:
     #     volumes:
-    #         - ${DATA_PATH}/zookeeper/data:/data
-    #         - ${DATA_PATH}/zookeeper/datalog:/datalog
-    #     ports:
-    #         - ${ZOOKEEPER_PORT}:2181
+    #         - ./jianmu/data:/home/jianmu/data
+    #     depends_on:
+    #         - jianmu-mysql
+    #     entrypoint: ["wait-for-it.sh", "jianmu-mysql:3306", "-t", "0", "--", "java", "-Duser.timezone=Asia/Shanghai",  "-jar", "jianmu-server.jar"]
+        
     #     networks:
-    #         - backend
-    # kafka:
-    #     image: wurstmeister/kafka
-    #     ports:
-    #         - "${KAFKA_PORT}:9092"
+    #         - frontend
+    # worker:
+    #     image: docker.jianmuhub.com/jianmu/jianmu-worker-docker:v1.0.9
+    #     restart: always
     #     environment:
-    #         KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
-    #         KAFKA_CREATE_TOPICS: "test:1:1"
-    #         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    #         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-    #         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://:9092
+    #         JIANMU_SRV_ADDRESS: http://ci-server:8081
+    #         JIANMU_SRV_SECRET: worker-secret
+    #         JIANMU_WORKER_ID: worker1
+    #         # 可同时并发的容器数量，默认为2
+    #         JIANMU_WORKER_CAPACITY: 5
     #     volumes:
-    #         - ${DATA_PATH}/kafka:/kafka
-                   
+    #         - /var/run/docker.sock:/var/run/docker.sock
+    #     depends_on:
+    #         - jianmu-mysql
+    #         - ci-server
+    #     networks:
+    #         - frontend
+    # web:
+        # image: docker.jianmuhub.com/jianmu/jianmu-ui:v2.7.1
+        # ports:
+        #     - "9880:80"
+        #     # - "98443:443"
+        # restart: always
+        # depends_on:
+        #     - jianmu-mysql
+        #     - ci-server
+        # networks:
+        #     - frontend
